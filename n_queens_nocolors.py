@@ -1,6 +1,5 @@
 # TODO: Implement First-Choice Hill Climbing
 
-from termcolor import colored
 from collections import Counter
 from math import factorial
 import random
@@ -8,7 +7,7 @@ import copy
 # import pdb # Debug
 
 DEBUG = False
-# Print function for DEBUG = True
+# Print function when DEBUG = True
 def log(s):
     if DEBUG:
         print s
@@ -23,7 +22,6 @@ def combination(n,r, verbose = False):
 
 class Game:
     def __init__(self, n):
-        self.verbose = True
         # Initialize a game board with n elements.
         self.board = Board(n)
         print ("Game initialized with size " + str(n) + ".")
@@ -45,7 +43,7 @@ class Game:
 
     # Moves a queen to new_row in game board
     def move_queen(self, new_row, queen, verbose = False):
-        update_text = colored("\nQueen " + str(queen.id) + " to row " + str(new_row) + "!", 'green')
+        update_text = "\nQueen " + str(queen.id) + " to row " + str(new_row) + "!"
         old_row = queen.row
         self.board.update_element(0, old_row, queen.col)
         self.board.update_element(queen, new_row, queen.col)
@@ -57,24 +55,21 @@ class Game:
 
     # Hill Climbing algorithm
     # Returns True if finds global minimum, False otherwise
-    def hill_climb(self, verbose = False):
+    def hill_climb(self):
         best_state_found = False
         iteration_count = 0
         while (best_state_found == False and self.board.current_score != 0):
             iteration_count += 1
-            best_state_found = self.go_to_next_best_state()
-            if verbose:
-                print (colored("\nIteration " + str(iteration_count),'yellow'))
-                print (self.board)
-                print ("Current score: " + str(self.board.current_score))
+            log("\nIteration " + str(iteration_count))
+            best_state_found = self.go_to_next_best_state(verbose = True)
 
         print ('Hit local minimum with score: ' + str(self.board.current_score))
 
         if (self.board.current_score == 0):
-            print (colored('Success!', 'green'))
+            print ('Success!')
             return True
         else:
-            print (colored('Fail!','red'))
+            print ('Fail!')
             return False
 
     # Goes to next best state, returns boolean best_state_found
@@ -224,7 +219,7 @@ class Queen:
 
     # Represent queens by a red Q
     def __repr__(self):
-        return colored('Q','red')
+        return ('Q')
 
     # Updates queen's placement
     def update_row(self, new_row):

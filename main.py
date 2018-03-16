@@ -1,32 +1,22 @@
-import random
-import n_queens as game
-import pdb, inspect # Debug
-
 # Options
-get_board_size = False # Get board size N as user input
+n = 10 # Board size
+num_restarts = 10 # Number of restarts
+use_colors = True # If you installed Termcolor, set to True for better output
 
 if __name__ == "__main__":
-    if get_board_size:
-        n = int(raw_input("Enter board size as integer n: "))
+    if use_colors:
+        import n_queens
     else:
-        n = 5
+        import n_queens_nocolors as n_queens
 
-    # Initialize a game board with n elements.
-    board = game.Board(n)
-    print ("Game board initialized with " + str(n) + " elements.")
-    # Initialize n queens, and place them on the board column by column
-    queens = [None] * n
-    # row_setup = [1,4,0,0,3]
-    for column in range(n):
-        row = random.randint(0,n-1);
-        # row = row_setup[column]
-        queens[column] = game.Queen(row, column)
-        board.update_element(queens[column], row, column)
+    successes = 0
+    fails = 0
+    for _ in range(num_restarts):
+        game = n_queens.Game(n)
+        success = game.hill_climb(verbose = True)
+        if success:
+            successes += 1
+        else:
+            fails += 1
 
-    print (str(n) + " queens are randomly placed on board.")
-    print (board)
-
-    # game = n_queens.game(n)
-    game.hill_climb(board,queens)
-
-    # print(queens)
+    print ("Successes: " + str(successes) + "\nFails: " + str(fails))
