@@ -6,9 +6,9 @@ Python implementation of Hill Climbing algorithm for N-Queens problem
 Choose options in `main.py`:
 
 ```
-ask_board_size = False
-use_colors = False
+board_size = 10
 num_restarts = 10
+use_colors = False
 ```
 Use the algorithm with:
 ```
