@@ -7,7 +7,7 @@ Python implementation of some local search algorithms for N-Queens problem:
 
 ## Usage
 
-Set options in `main.py`:
+Set options in `main.py`
 
 ```
 board_size = 10
@@ -19,9 +19,12 @@ Initialize with
 ` game = n_queens.game(n) `
 
 Run algorithms with
+
 `game.hill_climb()`
-or
+
 `game.first_best_hill_climb()`
+
+`game.simulated_annealing()`
 
 ## Motivation
 
