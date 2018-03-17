@@ -1,9 +1,12 @@
-# TODO: Implement Simulated Annealing
+# Last Updated: 18 March 2018
+# Author: emreozdincer
 
 from collections import Counter
-from math import factorial
+from math import factorial, exp, pow
 import random
 import copy
+
+# from time import sleep
 # import pdb # Debug
 
 DEBUG = False
@@ -22,7 +25,6 @@ def combination(n,r, verbose = False):
 
 class Game:
     def __init__(self, n):
-        self.verbose = True
         # Initialize a game board with n elements.
         self.board = Board(n)
         print ("Game initialized with size " + str(n) + ".")
@@ -48,9 +50,12 @@ class Game:
         old_row = queen.row
         self.board.update_element(0, old_row, queen.col)
         self.board.update_element(queen, new_row, queen.col)
-        queen.update_row(new_row)
+        queen.update_row(new_row) # not sure if this line is important
+        self.queens[queen.col].update_row(new_row)
 
         if (verbose):
+            print ("Queen's old row: " + str(old_row))
+            print ("Queen's new row: " + str(new_row))
             print(update_text)
             print(self.board)
 
@@ -74,7 +79,7 @@ class Game:
             print ('Success!')
             return True
         else:
-            print ('Fail!','red')
+            print ('Fail!')
             return False
 
     # First Best Hill Climbing algorithm
@@ -90,6 +95,7 @@ class Game:
                 print ("\nIteration " + str(iteration_count))
                 print (self.board)
                 print ("Current score: " + str(self.board.current_score))
+                # sleep(0.2)
 
         print ('Hit local minimum with score: ' + str(self.board.current_score))
 
@@ -99,6 +105,89 @@ class Game:
         else:
             print ('Fail!')
             return False
+
+    # Simulated Annealing algorithm
+    # Temperature decreases by cooling factor in each round
+    # Returns True if finds global minimum, False otherwise
+    def simulated_annealing(self, temperature = 10000, cooling_factor = 50, verbose = True):
+        iteration_count = 0
+        while (temperature > 0 and self.board.current_score != 0):
+            iteration_count += 1
+
+            self.simulated_annealing_next_node(temperature)
+
+            if verbose:
+                print ("\nIteration " + str(iteration_count))
+                print ('Temperature: ' + str(temperature))
+                print (self.board)
+                print ("Current score: " + str(self.board.current_score))
+                # sleep(0.2)
+
+            temperature -= cooling_factor
+
+        print ('Simulated Annealing result: ' + str(self.board.current_score))
+
+        if (self.board.current_score == 0):
+            print ('Success!')
+            return True
+        else:
+            print ('Fail!')
+            return False
+
+    # Goes to chosen state
+    def simulated_annealing_next_node(self, temperature):
+        log("Initial score: " + str(self.board.current_score))
+
+        n = self.board.size_n
+        resulting_state = copy.deepcopy(self)
+        queens = copy.deepcopy(self.queens)
+        current_best_score = self.board.current_score
+        chose_state = False
+
+        # Calculate scores for every available next state
+        # For each queen (randomized)
+        random.shuffle(queens)
+        for queen in queens:
+            # Break loop if we chose a state
+            if chose_state:
+                break
+
+            # There exists n-1 rows to explore
+            rows_to_explore = [x for x in range(n)]
+            rows_to_explore.pop(queen.row)
+
+            # For each unexplored row(randomized):
+            random.shuffle(rows_to_explore)
+            for row in rows_to_explore:
+                queens_original_row = queen.row
+                next_state = copy.deepcopy(self)
+                next_state.move_queen(row, queen)
+
+                if (next_state.board.current_score == 0):
+                    chose_state = True
+                    resulting_state = next_state
+                    break
+
+                delta_e = next_state.board.current_score - current_best_score
+                if (delta_e > 0):
+                    # choose this state
+                    chose_state = True
+                    resulting_state = next_state
+                    break
+                else:
+                    # with probability e^(dE/T)
+                    probability = float(delta_e)/temperature
+                    if (random.random() < exp(probability)):
+                        #choose this state
+                        chose_state = True
+                        resulting_state = next_state
+                        break
+                        # Put the explorer queen back to original place
+                    else:
+                        queen.update_row(queens_original_row)
+
+        self.update_to_state(resulting_state)
+        log("Iteration score: " + str(self.board.current_score))
 
     # Goes to next best state, returns boolean best_state_found
     def go_to_next_best_state(self):
@@ -112,7 +201,7 @@ class Game:
 
         # Calculate scores for every available next state
         # For each queen
-        for queens_index, queen in enumerate(queens):
+        for queen in queens:
             # There exists n-1 rows to explore
             rows_to_explore = [x for x in range(n)]
             rows_to_explore.pop(queen.row)
@@ -147,8 +236,9 @@ class Game:
         first_best_score = self.board.current_score
 
         # Calculate scores for every available next state
-        # For each queen
-        for queens_index, queen in enumerate(queens):
+        # For each queen (randomized)
+        random.shuffle(queens)
+        for queen in queens:
             # Break loop if we found a better state
             if first_best_state_found:
                 break
@@ -157,7 +247,8 @@ class Game:
             rows_to_explore = [x for x in range(n)]
             rows_to_explore.pop(queen.row)
 
-            # For each unexplored row:
+            # For each unexplored row(randomized):
+            random.shuffle(rows_to_explore)
             for row in rows_to_explore:
                 queens_original_row = queen.row
                 next_state = copy.deepcopy(self)
@@ -188,10 +279,6 @@ class Board:
     def __repr__(self):
         # return ('B')
         return ('\n'.join(map(repr, self.board)))
-
-    def print_board(self):
-        for row in self.board:
-            print row
 
     def update_element(self, element, row, col):
         self.board[row][col] = element

@@ -1,8 +1,11 @@
+# Last Updated: 18 March 2018
+# Author: emreozdincer
+
 # Options
-board_size = 5 # Board size
-num_restarts = 20 # Number of restarts
-verbose = True # Print board states and their scores while hill-climbing
-use_colors = True # If you installed Termcolor, set to True for better output
+use_colors = False # If you installed Termcolor, set to True for better console output
+board_size = 10 # Board size (N)
+num_restarts = 10 # Number of restarts
+print_iterations = True # Print resulting board states and scores during algorithm iterations
 
 if __name__ == "__main__":
     if use_colors:
@@ -11,17 +14,19 @@ if __name__ == "__main__":
         import n_queens_nocolors as n_queens
 
     successes = 0
-    fails = 0
+    failures = 0
     for _ in range(num_restarts):
         game = n_queens.Game(board_size)
-        # success = game.hill_climb(verbose)
-        success = game.first_best_hill_climb(verbose)
-        if success:
+
+        is_successful = game.hill_climb(print_iterations)
+        # is_successful = game.first_best_hill_climb(print_iterations)
+
+        # Temperature = Temperature - Cooling Factor
+        # is_successful = game.simulated_annealing(temperature=10000, cooling_factor=1, verbose=print_iterations)
+
+        if is_successful:
             successes += 1
         else:
-            fails += 1
+            failures += 1
 
-    print ("Successes: " + str(successes) + "\nFails: " + str(fails))
-
-    # game = n_queens.Game(board_size)
-    # game.go_to_first_best_state()
+    print ("Successes: " + str(successes) + "\nFailures: " + str(failures))

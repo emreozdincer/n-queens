@@ -3,11 +3,11 @@
 Python implementation of some local search algorithms for N-Queens problem:
 * Hill Climbing
 * First-Choice Hill Climbing
-
+* Simulated Annealing
 
 ## Usage
 
-Choose options in `main.py`:
+Set options in `main.py`:
 
 ```
 board_size = 10
