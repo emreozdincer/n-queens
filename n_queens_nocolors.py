@@ -1,4 +1,4 @@
-# TODO: Implement First-Choice Hill Climbing
+# TODO: Implement Simulated Annealing
 
 from collections import Counter
 from math import factorial
@@ -7,7 +7,7 @@ import copy
 # import pdb # Debug
 
 DEBUG = False
-# Print function when DEBUG = True
+# Print function for DEBUG = True
 def log(s):
     if DEBUG:
         print s
@@ -22,6 +22,7 @@ def combination(n,r, verbose = False):
 
 class Game:
     def __init__(self, n):
+        self.verbose = True
         # Initialize a game board with n elements.
         self.board = Board(n)
         print ("Game initialized with size " + str(n) + ".")
@@ -55,13 +56,40 @@ class Game:
 
     # Hill Climbing algorithm
     # Returns True if finds global minimum, False otherwise
-    def hill_climb(self):
+    def hill_climb(self, verbose = True):
         best_state_found = False
         iteration_count = 0
         while (best_state_found == False and self.board.current_score != 0):
             iteration_count += 1
-            log("\nIteration " + str(iteration_count))
-            best_state_found = self.go_to_next_best_state(verbose = True)
+            best_state_found = self.go_to_next_best_state()
+
+            if verbose:
+                print ("\nIteration " + str(iteration_count))
+                print (self.board)
+                print ("Current score: " + str(self.board.current_score))
+
+        print ('Hit local minimum with score: ' + str(self.board.current_score))
+
+        if (self.board.current_score == 0):
+            print ('Success!')
+            return True
+        else:
+            print ('Fail!','red')
+            return False
+
+    # First Best Hill Climbing algorithm
+    # Returns True if finds global minimum, False otherwise
+    def first_best_hill_climb(self, verbose = True):
+        better_state_exists = True
+        iteration_count = 0
+        while (better_state_exists == True and self.board.current_score != 0):
+            iteration_count += 1
+            better_state_exists = self.go_to_first_best_state()
+
+            if verbose:
+                print ("\nIteration " + str(iteration_count))
+                print (self.board)
+                print ("Current score: " + str(self.board.current_score))
 
         print ('Hit local minimum with score: ' + str(self.board.current_score))
 
@@ -73,7 +101,7 @@ class Game:
             return False
 
     # Goes to next best state, returns boolean best_state_found
-    def go_to_next_best_state(self, verbose = False):
+    def go_to_next_best_state(self):
         log("Initial score: " + str(self.board.current_score))
 
         n = self.board.size_n
@@ -105,9 +133,49 @@ class Game:
                     queen.update_row(queens_original_row)
 
         self.update_to_state(best_state)
-
         log("Best iteration score: " + str(self.board.current_score))
         return best_state_found
+
+    # Goes to first best state if possible, returns boolean first_best_state_found
+    def go_to_first_best_state(self):
+        log("Initial score: " + str(self.board.current_score))
+
+        n = self.board.size_n
+        queens = copy.deepcopy(self.queens)
+        first_best_state = copy.deepcopy(self)
+        first_best_state_found = False
+        first_best_score = self.board.current_score
+
+        # Calculate scores for every available next state
+        # For each queen
+        for queens_index, queen in enumerate(queens):
+            # Break loop if we found a better state
+            if first_best_state_found:
+                break
+
+            # There exists n-1 rows to explore
+            rows_to_explore = [x for x in range(n)]
+            rows_to_explore.pop(queen.row)
+
+            # For each unexplored row:
+            for row in rows_to_explore:
+                queens_original_row = queen.row
+                next_state = copy.deepcopy(self)
+                next_state.move_queen(row, queen)
+                # If moving the queen yields a better result than the current state
+                # Save the next best state
+                if (next_state.board.current_score < first_best_score):
+                    log("First better state is found with score " + str(next_state.board.current_score))
+                    first_best_state_found = True
+                    first_best_state = next_state
+                    break
+                # Put the explorer queen back to original place
+                else:
+                    queen.update_row(queens_original_row)
+
+        self.update_to_state(first_best_state)
+        log("First Best State's score: " + str(self.board.current_score))
+        return first_best_state_found
 
 class Board:
     # Initializes empty n x n board
@@ -139,13 +207,13 @@ class Board:
         # Check horizontal conflicts
         # For each row, count the number of queens, save in 'queens_by_rows' array
         queens_by_rows = [0] * n
-        vertical_conflicts = 0
+        horizontal_conflicts = 0
         for row in range(n):
             for column in range(n):
                 if (isinstance(self.board[row][column], Queen)):
                     queens_by_rows[row] += 1
             if (queens_by_rows[row] >= 2):
-                vertical_conflicts += combination(queens_by_rows[row],2)
+                horizontal_conflicts += combination(queens_by_rows[row],2)
 
         # Check vertical conflicts
         # For each column, count the number of queens, save in 'queens_by_columns' array
@@ -160,9 +228,9 @@ class Board:
 
         # Check diagonal conflicts
         f_diagonal_conflicts, b_diagonal_conflicts = self.get_diagonal_conflicts()
-        score = vertical_conflicts + f_diagonal_conflicts + b_diagonal_conflicts
+        score = horizontal_conflicts + f_diagonal_conflicts + b_diagonal_conflicts
         if (verbose):
-            log ("vertical_conflicts: " + str(vertical_conflicts) + "\n")
+            log ("horizontal_conflicts: " + str(horizontal_conflicts) + "\n")
             log ("total score: " + str(score))
         self.current_score = score
         return score;
@@ -217,11 +285,11 @@ class Queen:
         # A queen is uniquely identified by its column number (starting from index 1)
         self.id = self.col + 1
 
-    # Represent queens by a red Q
+    # Represent queen by a red Q
     def __repr__(self):
         return ('Q')
 
-    # Updates queen's placement
+    # Update queen's placement
     def update_row(self, new_row):
         self.row = new_row
 

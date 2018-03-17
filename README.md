@@ -1,21 +1,27 @@
 ## Synopsis
 
-Python implementation of Hill Climbing algorithm for N-Queens problem
+Python implementation of some local search algorithms for N-Queens problem:
+* Hill Climbing
+* First-Choice Hill Climbing
+
 
 ## Usage
+
 Choose options in `main.py`:
 
 ```
 board_size = 10
 num_restarts = 10
-use_colors = False
+# ...
 ```
-Use the algorithm with:
-```
-game = n_queens.game(n)
-game.hill_climb()
-```
-Further play with options in `n_queens` files by changing `verbose` arguments and the `DEBUG` variable.
+
+Initialize with
+` game = n_queens.game(n) `
+
+Run algorithms with
+`game.hill_climb()`
+or
+`game.first_best_hill_climb()`
 
 ## Motivation
 
